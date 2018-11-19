@@ -5,7 +5,11 @@
 </head>
 <body>
 <div id="wrapper">
-  {{--@include('partials._nav', ['navItems' => session(SES_USER) ? NAV_ITEMS_AUTH : NAV_ITEMS])--}}
+  <nav id="nav" class="navbar card-header navbar-light">
+    <div class="mr-auto breadcrumb-dn">
+      The Firespring SWAPI Project
+    </div>
+  </nav>
 
   <div class="container" style="margin:80px auto 0 auto;padding:50px 5px;">
     @if(session('info'))

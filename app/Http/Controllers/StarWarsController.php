@@ -68,22 +68,29 @@ class StarWarsController extends Controller {
       $allResults = Helper::getDataCollection( URL_PLANET, '', true );
 
       $data = Helper::requestData( URL_PLANET );
-      $planets = Helper::hydrateData( $data, Planet::class );
+      //$planets = Helper::hydrateData( $data, Planet::class );
+      //dd( json_decode($data[0])->results );
 
-      foreach ( $planets as $planet ) {
-        $planet->hydrate();
+      $planets = json_decode( $data[0] );
+      foreach ( $planets->results as $item ) {
+        $planetResidents[] = $item;
       }
+
+      //foreach ( $planets as $planet ) {
+      //  //$planet->hydrate();
+      //  $planetResidents[] = $planet;
+      //}
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////
       // TODO: ---------------------------------------------------------------------------------------
       // TODO: Update so $planetResidents is KVP of [ string $planet->name => array $planet->residents ]
       // TODO: ---------------------------------------------------------------------------------------
       ////////////////////////////////////////////////////////////////////////////////////////////////////
-      $planetResidents = $planets;
+      //$planetResidents = $planets;
     } catch ( Exception $ex ) {
       logger( $ex->getMessage() );
     }
-
+//dd($planetResidents);
     return view( 'layouts.planet-residents', [ 'planetResidents' => $planetResidents ] );
   }
 

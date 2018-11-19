@@ -2,8 +2,18 @@
 
 @section('content')
   @if($planetResidents !== null)
-    @foreach($planetResidents as $key => $value)
-      {!! json_encode($key) . ': ' . json_encode($value) . '<br/>' !!}
+    @foreach($planetResidents as $i => $planet)
+      @foreach($planet as $key => $value)
+        @if(is_array($value))
+          {!! "$key<br/>" !!}
+          @foreach($value as $k => $val)
+            {!! "&nbsp; - $val<br/>" !!}
+          @endforeach
+        @else
+          {!! $key . ': ' . $value . '<br/>' !!}
+        @endif
+      @endforeach
+      {!! '<br/>' !!}
     @endforeach
   @else
     @includeIf('partials._empty-data-set')
