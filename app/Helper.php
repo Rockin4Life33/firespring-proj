@@ -23,6 +23,27 @@ abstract class Helper {
     return collect( file_get_contents( $url, false ) );
   }
 
+//  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
+//    $results = [];
+//
+//    if ( $queryStr !== '' ) {
+//      $url .= "?$queryStr";
+//    }
+//
+//    $collection = collect( file_get_contents( $url, false ) );
+//
+//    if ( $isCollectAll ) {
+//      while ( $collection->has( 'next' ) && $collection->get( 'next' ) !== null ) {
+//        $url = $collection->get( 'next' ) . "?$queryStr";
+//        $collection = collect( file_get_contents( $url, false ) );
+//
+//        $results[] = $collection; // TODO: Iterate over $collection and place each value into $results[]
+//      }
+//    }
+//
+//    return $results;
+//  }
+
   /**
    * @param        $url
    * @param string $queryStr
@@ -32,19 +53,16 @@ abstract class Helper {
    */
   public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
     $results = [];
-
-    if ( $queryStr !== '' ) {
-      $url .= "?$queryStr";
-    }
-
-    $collection = collect( file_get_contents( $url, false ) );
+    $collection = json_decode( self::requestData( $url )[0] );
 
     if ( $isCollectAll ) {
-      while ( $collection->has( 'next' ) && $collection->get( 'next' ) !== null ) {
-        $url = $collection->get( 'next' ) . "?$queryStr";
-        $collection = collect( file_get_contents( $url, false ) );
+      $results[] = $collection->results;
 
-        $results[] = $collection; // TODO: Iterate over $collection and place each value into $results[]
+      while ( $collection->next !== null && $collection->next !== '' ) {
+        $url = $collection->next;
+        $collection = json_decode( self::requestData( $url )[0] );
+
+        $results[] = $collection->results; // TODO: Iterate over $collection and place each value into $results[]
       }
     }
 
@@ -130,6 +148,16 @@ abstract class Helper {
 
 //#region  CONSTANTS
 
+// TODO: Use port# because using xampp/wamp vs. `php artisan serve` will need different endpoints
+//$_SERVER['REMOTE_PORT'] = '';
+//$_SERVER['SERVER_PORT'] = '80';
+// TODO: ........................................................................................
+
+$isLocal = $_SERVER['HTTP_HOST'] === 'localhost' ||
+           $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ||
+           $_SERVER['REMOTE_ADDR'] === '::1';
+
+\define( 'BASE_ASSETS_HOST', $isLocal ? '/firespring-proj/public/' : '/' );
 \define( 'BASE_URL', 'https://swapi.co/api/' );
 \define( 'URL_PEOPLE', BASE_URL . 'people' );
 \define( 'URL_PLANET', BASE_URL . 'planets' );

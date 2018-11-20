@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use function _\flatten;
 use App\Helper;
 use App\Models\Character;
 use App\Models\Planet;
 use Exception;
 use Illuminate\View\View;
+
 
 class StarWarsController extends Controller {
 
@@ -68,9 +70,6 @@ class StarWarsController extends Controller {
       $allResults = Helper::getDataCollection( URL_PLANET, '', true );
 
       $data = Helper::requestData( URL_PLANET );
-      //$planets = Helper::hydrateData( $data, Planet::class );
-      //dd( json_decode($data[0])->results );
-
       $planets = json_decode( $data[0] );
       foreach ( $planets->results as $item ) {
         $planetResidents[] = $item;
@@ -86,11 +85,11 @@ class StarWarsController extends Controller {
       // TODO: Update so $planetResidents is KVP of [ string $planet->name => array $planet->residents ]
       // TODO: ---------------------------------------------------------------------------------------
       ////////////////////////////////////////////////////////////////////////////////////////////////////
-      //$planetResidents = $planets;
+//      $planetResidents = $allResults;
+      $planetResidents = flatten( $allResults );
     } catch ( Exception $ex ) {
       logger( $ex->getMessage() );
     }
-//dd($planetResidents);
     return view( 'layouts.planet-residents', [ 'planetResidents' => $planetResidents ] );
   }
 
