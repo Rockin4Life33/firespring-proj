@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use function _\flatten;
+use function _\map;
 use App\Helper;
 use App\Models\Character;
 use App\Models\Planet;
@@ -10,22 +11,24 @@ use Exception;
 use Illuminate\View\View;
 
 
-class StarWarsController extends Controller {
+class StarWarsController extends Controller
+{
 
   /**
    * Display a listing of the resource.
    *
    * @return View
    */
-  public function index(): View {
-    $data = Helper::requestData( URL_PEOPLE );
-    $characters = Helper::hydrateData( $data, Character::class );
+  public function index(): View
+  {
+    $data = Helper::requestData(URL_PEOPLE);
+    $characters = Helper::hydrateData($data, Character::class);
 
-    foreach ( $characters as $character ) {
+    foreach ($characters as $character) {
       $character->hydrate();
     }
 
-    return view( 'layouts.characters', [ 'characters' => $characters ] );
+    return view('layouts.characters', ['characters' => $characters]);
   }
 
   /**
@@ -33,64 +36,55 @@ class StarWarsController extends Controller {
    *
    * @return View
    */
-  public function character( string $name ): View {
+  public function character(string $name): View
+  {
     /** @var Character $character */
     $character = null;
 
     try {
-      $data = Helper::requestData( URL_PEOPLE, "search=$name" );
-      $characters = Helper::hydrateData( $data, Character::class );
+      $data = Helper::requestData(URL_PEOPLE, "search=$name");
+      $characters = Helper::hydrateData($data, Character::class);
 
-      if ( $characters !== null && \count( $characters ) > 0 ) {
-        $character = $characters[ 0 ];
+      if ($characters !== null && \count($characters) > 0) {
+        $character = $characters[0];
         $character->hydrate();
       }
-    } catch ( Exception $ex ) {
-      logger( $ex->getMessage() );
+    } catch (Exception $ex) {
+      logger($ex->getMessage());
     }
 
-    return view( 'layouts.character', [ 'character' => $character ] );
+    return view('layouts.character', ['character' => $character]);
   }
 
   /**
    * @return View
    */
-  public function characters(): View {
+  public function characters(): View
+  {
     return $this->index();
   }
 
   /**
    * @return View
    */
-  public function planetResidents(): View {
-    /** @var Planet[] $planetResidents */
+  public function planetResidents(): View
+  {
     $planetResidents = [];
 
     try {
-      $allResults = Helper::getDataCollection( URL_PLANET, '', true );
+      $allResults = Helper::getDataCollection(URL_PLANET, '', true);
+      $allResultsFlat = flatten($allResults);
 
-      $data = Helper::requestData( URL_PLANET );
-      $planets = json_decode( $data[0] );
-      foreach ( $planets->results as $item ) {
-        $planetResidents[] = $item;
-      }
+      $results = map($allResultsFlat, function ($item) {
+        return [ $item->name => $item->residents ];
+      });
 
-      //foreach ( $planets as $planet ) {
-      //  //$planet->hydrate();
-      //  $planetResidents[] = $planet;
-      //}
-
-      ////////////////////////////////////////////////////////////////////////////////////////////////////
-      // TODO: ---------------------------------------------------------------------------------------
-      // TODO: Update so $planetResidents is KVP of [ string $planet->name => array $planet->residents ]
-      // TODO: ---------------------------------------------------------------------------------------
-      ////////////////////////////////////////////////////////////////////////////////////////////////////
-//      $planetResidents = $allResults;
-      $planetResidents = flatten( $allResults );
-    } catch ( Exception $ex ) {
-      logger( $ex->getMessage() );
+       $planetResidents = $results;
+//      $planetResidents = flatten($allResults);
+    } catch (Exception $ex) {
+      logger($ex->getMessage());
     }
-    return view( 'layouts.planet-residents', [ 'planetResidents' => $planetResidents ] );
+    return view('layouts.planet-residents', ['planetResidents' => $planetResidents]);
   }
 
 }

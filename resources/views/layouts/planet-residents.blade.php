@@ -2,19 +2,23 @@
 
 @section('content')
   @if($planetResidents !== null)
-    @foreach($planetResidents as $i => $planet)
-      @foreach($planet as $key => $value)
-        @if(is_array($value))
-          {!! "$key<br/>" !!}
-          @foreach($value as $k => $val)
-            {!! "&nbsp; - $val<br/>" !!}
+    {!! '{<br/>' !!}
+    @foreach($planetResidents as $planetKey => $planets)
+
+      @foreach($planets as $planet => $residents)
+        {!! "<span> &nbsp; &nbsp; '$planet': [ </span><br/>" !!}
+        @if(is_array($residents))
+          @foreach($residents as $key => $value)
+            {!! "<span> &nbsp; &nbsp; &nbsp; &nbsp; '$value' </span><br/>" !!}
           @endforeach
         @else
-          {!! $key . ': ' . $value . '<br/>' !!}
+          {!! $residents . '<br/>' !!}
         @endif
+        {!! "<span> &nbsp; &nbsp; ] </span><br/>" !!}
       @endforeach
-      {!! '<br/>' !!}
+
     @endforeach
+    {!! '<br/>}' !!}
   @else
     @includeIf('partials._empty-data-set')
   @endif
