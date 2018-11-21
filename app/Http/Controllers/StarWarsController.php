@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use function _\flatten;
 use App\Helper;
 use App\Models\Character;
-use App\Models\Planet;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
-class StarWarsController extends Controller {
+
+class StarWarsController extends Controller
+{
 
   /**
    * Display a listing of the resource.
    *
    * @return View
    */
-  public function index(): View {
+  public function index(): View
+  {
     $data = Helper::requestData( URL_PEOPLE );
     $characters = Helper::hydrateData( $data, Character::class );
 
@@ -23,7 +27,7 @@ class StarWarsController extends Controller {
       $character->hydrate();
     }
 
-    return view( 'layouts.characters', [ 'characters' => $characters ] );
+    return view( 'layouts.characters', ['characters' => $characters] );
   }
 
   /**
@@ -31,7 +35,8 @@ class StarWarsController extends Controller {
    *
    * @return View
    */
-  public function character( string $name ): View {
+  public function character( string $name ): View
+  {
     /** @var Character $character */
     $character = null;
 
@@ -47,51 +52,51 @@ class StarWarsController extends Controller {
       logger( $ex->getMessage() );
     }
 
-    return view( 'layouts.character', [ 'character' => $character ] );
+    return view( 'layouts.character', ['character' => $character] );
   }
 
   /**
    * @return View
    */
-  public function characters(): View {
+  public function characters(): View
+  {
     return $this->index();
   }
 
   /**
-   * @return View
+   * Return the raw JSON of [ PlanetName: [ planetResidentName ] ]
+   *
+   * Lack of any Auth or security due to the nature of this being a code test...
    */
-  public function planetResidents(): View {
-    /** @var Planet[] $planetResidents */
-    $planetResidents = [];
+  public function planetResidents(): void
+  {
+    $planetResidents = null;
+    $results = [];
+    $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
     try {
-      $allResults = Helper::getDataCollection( URL_PLANET, '', true );
+      $collection = json_decode( Helper::requestData( URL_PLANET )[ 0 ] );
+      $results[] = $collection->results;
 
-      $data = Helper::requestData( URL_PLANET );
-      //$planets = Helper::hydrateData( $data, Planet::class );
-      //dd( json_decode($data[0])->results );
-
-      $planets = json_decode( $data[0] );
-      foreach ( $planets->results as $item ) {
-        $planetResidents[] = $item;
+      while ( $collection->next !== null && $collection->next !== '' ) {
+        $url = $collection->next;
+        $collection = json_decode( Helper::requestData( $url )[ 0 ] );
+        $results[] = $collection->results;
       }
 
-      //foreach ( $planets as $planet ) {
-      //  //$planet->hydrate();
-      //  $planetResidents[] = $planet;
-      //}
+      $data = ( new Collection( flatten( $results ) ) )->map( function ( $result ) {
+        return [$result->name => ( new Collection( $result->residents ) )->map( function ( $resident ) {
+          return json_decode( collect( file_get_contents( $resident ) )[ 0 ] )->name;
+        } )];
+      } );
 
-      ////////////////////////////////////////////////////////////////////////////////////////////////////
-      // TODO: ---------------------------------------------------------------------------------------
-      // TODO: Update so $planetResidents is KVP of [ string $planet->name => array $planet->residents ]
-      // TODO: ---------------------------------------------------------------------------------------
-      ////////////////////////////////////////////////////////////////////////////////////////////////////
-      //$planetResidents = $planets;
+      $planetResidents = json_encode( $data, $options );
     } catch ( Exception $ex ) {
       logger( $ex->getMessage() );
     }
-//dd($planetResidents);
-    return view( 'layouts.planet-residents', [ 'planetResidents' => $planetResidents ] );
+
+    header( 'Content-type: application/json' );
+    echo $planetResidents;
   }
 
 }
