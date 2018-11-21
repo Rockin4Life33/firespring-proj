@@ -23,27 +23,6 @@ abstract class Helper {
     return collect( file_get_contents( $url, false ) );
   }
 
-//  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
-//    $results = [];
-//
-//    if ( $queryStr !== '' ) {
-//      $url .= "?$queryStr";
-//    }
-//
-//    $collection = collect( file_get_contents( $url, false ) );
-//
-//    if ( $isCollectAll ) {
-//      while ( $collection->has( 'next' ) && $collection->get( 'next' ) !== null ) {
-//        $url = $collection->get( 'next' ) . "?$queryStr";
-//        $collection = collect( file_get_contents( $url, false ) );
-//
-//        $results[] = $collection; // TODO: Iterate over $collection and place each value into $results[]
-//      }
-//    }
-//
-//    return $results;
-//  }
-
   /**
    * @param        $url
    * @param string $queryStr
@@ -51,23 +30,23 @@ abstract class Helper {
    *
    * @return array
    */
-  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
-    $results = [];
-    $collection = json_decode( self::requestData( $url )[0] );
-
-    if ( $isCollectAll ) {
-      $results[] = $collection->results;
-
-      while ( $collection->next !== null && $collection->next !== '' ) {
-        $url = $collection->next;
-        $collection = json_decode( self::requestData( $url )[0] );
-
-        $results[] = $collection->results; // TODO: Iterate over $collection and place each value into $results[]
-      }
-    }
-
-    return $results;
-  }
+//  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
+//    $results = [];
+//    $collection = json_decode( self::requestData( $url )[0] );
+//
+//    if ( $isCollectAll ) {
+//      $results[] = $collection->results;
+//
+//      while ( $collection->next !== null && $collection->next !== '' ) {
+//        $url = $collection->next;
+//        $collection = json_decode( self::requestData( $url )[0] );
+//
+//        $results[] = $collection->results;
+//      }
+//    }
+//
+//    return $results;
+//  }
 
   /**
    * @param Collection $data

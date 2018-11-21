@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use function _\flatten;
-use function _\map;
 use App\Helper;
 use App\Models\Character;
-use App\Models\Planet;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 
@@ -21,14 +20,14 @@ class StarWarsController extends Controller
    */
   public function index(): View
   {
-    $data = Helper::requestData(URL_PEOPLE);
-    $characters = Helper::hydrateData($data, Character::class);
+    $data = Helper::requestData( URL_PEOPLE );
+    $characters = Helper::hydrateData( $data, Character::class );
 
-    foreach ($characters as $character) {
+    foreach ( $characters as $character ) {
       $character->hydrate();
     }
 
-    return view('layouts.characters', ['characters' => $characters]);
+    return view( 'layouts.characters', ['characters' => $characters] );
   }
 
   /**
@@ -36,24 +35,24 @@ class StarWarsController extends Controller
    *
    * @return View
    */
-  public function character(string $name): View
+  public function character( string $name ): View
   {
     /** @var Character $character */
     $character = null;
 
     try {
-      $data = Helper::requestData(URL_PEOPLE, "search=$name");
-      $characters = Helper::hydrateData($data, Character::class);
+      $data = Helper::requestData( URL_PEOPLE, "search=$name" );
+      $characters = Helper::hydrateData( $data, Character::class );
 
-      if ($characters !== null && \count($characters) > 0) {
-        $character = $characters[0];
+      if ( $characters !== null && \count( $characters ) > 0 ) {
+        $character = $characters[ 0 ];
         $character->hydrate();
       }
-    } catch (Exception $ex) {
-      logger($ex->getMessage());
+    } catch ( Exception $ex ) {
+      logger( $ex->getMessage() );
     }
 
-    return view('layouts.character', ['character' => $character]);
+    return view( 'layouts.character', ['character' => $character] );
   }
 
   /**
@@ -65,26 +64,39 @@ class StarWarsController extends Controller
   }
 
   /**
-   * @return View
+   * Return the raw JSON of [ PlanetName: [ planetResidentName ] ]
+   *
+   * Lack of any Auth or security due to the nature of this being a code test...
    */
-  public function planetResidents(): View
+  public function planetResidents(): void
   {
-    $planetResidents = [];
+    $planetResidents = null;
+    $results = [];
+    $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
     try {
-      $allResults = Helper::getDataCollection(URL_PLANET, '', true);
-      $allResultsFlat = flatten($allResults);
+      $collection = json_decode( Helper::requestData( URL_PLANET )[ 0 ] );
+      $results[] = $collection->results;
 
-      $results = map($allResultsFlat, function ($item) {
-        return [ $item->name => $item->residents ];
-      });
+      while ( $collection->next !== null && $collection->next !== '' ) {
+        $url = $collection->next;
+        $collection = json_decode( Helper::requestData( $url )[ 0 ] );
+        $results[] = $collection->results;
+      }
 
-       $planetResidents = $results;
-//      $planetResidents = flatten($allResults);
-    } catch (Exception $ex) {
-      logger($ex->getMessage());
+      $data = ( new Collection( flatten( $results ) ) )->map( function ( $result ) {
+        return [$result->name => ( new Collection( $result->residents ) )->map( function ( $resident ) {
+          return json_decode( collect( file_get_contents( $resident ) )[ 0 ] )->name;
+        } )];
+      } );
+
+      $planetResidents = json_encode( $data, $options );
+    } catch ( Exception $ex ) {
+      logger( $ex->getMessage() );
     }
-    return view('layouts.planet-residents', ['planetResidents' => $planetResidents]);
+
+    header( 'Content-type: application/json' );
+    echo $planetResidents;
   }
 
 }
