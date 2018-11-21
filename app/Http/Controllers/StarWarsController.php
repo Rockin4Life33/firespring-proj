@@ -37,7 +37,6 @@ class StarWarsController extends Controller
    */
   public function character( string $name ): View
   {
-    /** @var Character $character */
     $character = null;
 
     try {
@@ -53,6 +52,9 @@ class StarWarsController extends Controller
     }
 
     return view( 'layouts.character', ['character' => $character] );
+
+//    header( 'Content-type: application/json' );
+//    echo var_dump(get_object_vars($character));
   }
 
   /**
