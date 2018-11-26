@@ -97,7 +97,7 @@ class StarWarsController extends Controller
       logger( $ex->getMessage() );
     }
 
-    header( 'Content-type: application/json' );
+    //header( 'Content-type: application/json' );
     echo $planetResidents;
   }
 

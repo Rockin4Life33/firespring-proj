@@ -3,6 +3,8 @@
 @section('content')
   @if($character !== null)
 
+    @includeIf('partials._character')
+
     {!! var_dump($character) !!}
 
     {{--@foreach($character as $key => $value)--}}

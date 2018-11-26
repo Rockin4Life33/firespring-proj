@@ -132,11 +132,12 @@ abstract class Helper {
 //$_SERVER['SERVER_PORT'] = '80';
 // TODO: ........................................................................................
 
-$isLocal = $_SERVER['HTTP_HOST'] === 'localhost' ||
-           $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ||
-           $_SERVER['REMOTE_ADDR'] === '::1';
+//$isLocal = $_SERVER['HTTP_HOST'] === 'localhost' ||
+//           $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ||
+//           $_SERVER['REMOTE_ADDR'] === '::1';
 
-\define( 'BASE_ASSETS_HOST', $isLocal ? '/firespring-proj/public/' : '/' );
+//\define( 'BASE_ASSETS_HOST', $isLocal ? '/firespring-proj/public/' : '/' );
+\define( 'BASE_ASSETS_HOST', '/' );
 \define( 'BASE_URL', 'https://swapi.co/api/' );
 \define( 'URL_PEOPLE', BASE_URL . 'people' );
 \define( 'URL_PLANET', BASE_URL . 'planets' );
