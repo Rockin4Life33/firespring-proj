@@ -11,7 +11,7 @@
     </div>
   </nav>
 
-  <div class="container" style="margin:80px auto 0 auto;padding:50px 5px;">
+  <div class="container" style="padding:50px 5px;">
     @if(session('info'))
       <div id='alert-container' class="alert alert-{{ session('alert') ?? 'info' }} alert-dismissible fade show"
            role="alert">

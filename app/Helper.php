@@ -66,8 +66,25 @@ abstract class Helper {
         $obj[] = self::deserializeObj( $dataArr[ $i ], $modelClass );
       }
     } catch ( \Exception $ex ) {
-      // TODO: Log exception and/or attempt to recover, else, return false
+      return [];
+    }
 
+    return $obj;
+  }
+
+  public static function hydrateDataFromArray( array $data, $modelClass ): array {
+    $obj = [];
+
+    try {
+      foreach ( $data as $i => $iValue ) {
+        //$obj[] = self::deserializeObj( get_object_vars( $data[ $i ] ), $modelClass );
+
+        $character = self::deserializeObj( get_object_vars( $data[ $i ] ), $modelClass );
+        //$character->hydrate();
+
+        $obj[] = $character;
+      }
+    } catch ( \Exception $ex ) {
       return [];
     }
 
@@ -126,11 +143,6 @@ abstract class Helper {
 }
 
 //#region  CONSTANTS
-
-// TODO: Use port# because using xampp/wamp vs. `php artisan serve` will need different endpoints
-//$_SERVER['REMOTE_PORT'] = '';
-//$_SERVER['SERVER_PORT'] = '80';
-// TODO: ........................................................................................
 
 //$isLocal = $_SERVER['HTTP_HOST'] === 'localhost' ||
 //           $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ||

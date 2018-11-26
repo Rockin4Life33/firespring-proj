@@ -2,26 +2,20 @@
 
 @section('content')
   @if($character !== null)
-
     @includeIf('partials._character')
-
-    {!! var_dump($character) !!}
-
-    {{--@foreach($character as $key => $value)--}}
-      {{--@if(is_array($value))--}}
-        {{--{!! "$key:<br/>" !!}--}}
-        {{--@foreach($value as $k => $val)--}}
-          {{--{!! "<span> &nbsp; &dash; &nbsp; </span> $k" . ': ' . $val . '<br/>' !!}--}}
-        {{--@endforeach--}}
-      {{--@else--}}
-        {{--{!! "$key: " . $value . '<br/>' !!}--}}
-      {{--@endif--}}
-    {{--@endforeach--}}
   @else
     @includeIf('partials._empty-data-set')
   @endif
 @endsection
 
 @section('scripts')
+<style type="text/css" rel="stylesheet">
+  ul {
+    list-style: none;
+  }
 
+  li > ul:not(:first-child) {
+    margin-top: 1em;
+  }
+</style>
 @endsection

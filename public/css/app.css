@@ -10471,18 +10471,3 @@ a.text-dark:focus {
   -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
-
-
-dd {
-  text-indent: 2em;
-}
-
-ul {
-  list-style: none;
-}
-
-li > ul:nth-child(even) {
-  margin-top: 1em;
-}
-
-

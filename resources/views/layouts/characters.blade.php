@@ -2,60 +2,70 @@
 
 @section('content')
   @if($characters !== null && count($characters) > 0)
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css"/>
-    <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+    <link rel="stylesheet"
+          type="text/css"
+          href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
 
-    @foreach($characters as $character)
-{{--      {!! json_encode($character) !!}--}}
-      @foreach($character as $key => $value)
-        {!! json_encode($key) . ': ' . json_encode($value) . '<br/>' !!}
-      @endforeach
-      {!! '<br />' !!}
-    @endforeach
+    <table id="characters" class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Birth Year</th>
+          <th>Gender</th>
+          <th>Hair Color</th>
+          <th>Height</th>
+          <th>Mass</th>
+          <th>Skin Color</th>
+          <th>Home World</th>
+          {{--<th>Films</th>--}}
+          {{--<th>Species</th>--}}
+          {{--<th>Starships</th>--}}
+          {{--<th>Vehicles</th>--}}
+        </tr>
+      </thead>
 
-    {{--<table id="characters" class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">--}}
-      {{--<thead>--}}
-      {{--<tr>--}}
-        {{--<th>Tag Number</th>--}}
-        {{--<th>Tag Color</th>--}}
-        {{--<th>Date of Birth</th>--}}
-        {{--<th>Gender</th>--}}
-        {{--<th>Sire</th>--}}
-        {{--<th>Pasture</th>--}}
-        {{--<th>Comments</th>--}}
-        {{--<th>Herd</th>--}}
-      {{--</tr>--}}
-      {{--</thead>--}}
+      <tbody>
+        @foreach($characters as $character)
+          <tr>
+            <th>
+              <a href="{{ route('starwars.character', \_\split($character->name, ' ', 1)) }}">
+                {{ $character->name }}
+              </a>
+            </th>
+            <th>{{ $character->birth_year }}</th>
+            <th>{{ $character->gender }}</th>
+            <th>{{ $character->hair_color }}</th>
+            <th>{{ $character->height }}</th>
+            <th>{{ $character->mass }}</th>
+            <th>{{ $character->skin_color }}</th>
+            <th>{{ $character->homeworld->name ?? '' }}</th>
+            {{--<th>{{ array_reduce($character->films, function($film) { return "<pre>$film->title</pre>"; }) }}</th>--}}
+            {{--<th>{{ $character->species }}</th>--}}
+            {{--<th>{{ $character->starships }}</th>--}}
+            {{--<th>{{ $character->vehicles }}</th>--}}
+          </tr>
+        @endforeach
+      </tbody>
 
-      {{--<tbody>--}}
-      {{--@foreach($characters as $character)--}}
-        {{--<tr>--}}
-          {{--<th><a href="{{ route('animal.edit', $character->id) }}">{{ $character->tag_number }}</a></th>--}}
-          {{--<th>{{ $character->tag_color }}</th>--}}
-          {{--<th>{{ date( 'm/d/y h:m A', strtotime( $character->date_of_birth ) ) }}</th>--}}
-          {{--<th>{{ $character->gender }}</th>--}}
-          {{--<th>{{ $character->sire }}</th>--}}
-          {{--<th>{{ $character->pasture }}</th>--}}
-          {{--<th>{{ $character->comments }}</th>--}}
-          {{--<th>{{ $character->herd_id }}</th>--}}{{-- TODO: Updated this to display the herd.name for the given animal.herd_id --}}
-        {{--</tr>--}}
-      {{--@endforeach--}}
-      {{--</tbody>--}}
-
-      {{--<tfoot>--}}
-      {{--<tr>--}}
-        {{--<th>Tag Number</th>--}}
-        {{--<th>Tag Color</th>--}}
-        {{--<th>Date of Birth</th>--}}
-        {{--<th>Gender</th>--}}
-        {{--<th>Sire</th>--}}
-        {{--<th>Pasture</th>--}}
-        {{--<th>Comments</th>--}}
-        {{--<th>Herd</th>--}}
-      {{--</tr>--}}
-      {{--</tfoot>--}}
-    {{--</table>--}}
+      <tfoot>
+        <tr>
+          <th>Name</th>
+          <th>Birth Year</th>
+          <th>Gender</th>
+          <th>Hair Color</th>
+          <th>Height</th>
+          <th>Mass</th>
+          <th>Skin Color</th>
+          <th>Home World</th>
+          {{--<th>Films</th>--}}
+          {{--<th>Species</th>--}}
+          {{--<th>Starships</th>--}}
+          {{--<th>Vehicles</th>--}}
+        </tr>
+      </tfoot>
+    </table>
   @else
     @includeIf('partials._empty-data-set')
   @endif
@@ -64,6 +74,7 @@
 @section('scripts')
   <script>
     $( document ).ready( () => {
+      // $( '#characters' ).DataTable( {} );
       $( '#characters' ).DataTable( {
         'columnDefs': [
           {
@@ -74,7 +85,7 @@
           }
         ]
       } ).column( 1 ).order( 'asc' ).draw();
-      $( 'select' ).addClass( 'mdb-select' );
+      // $( 'select' ).addClass( 'mdb-select' );
       // $('.mdb-select').material_select();
     } );
   </script>
