@@ -11,59 +11,28 @@ abstract class Helper {
 
   /**
    * @param        $url
-   * @param string $queryStr
    *
    * @return Collection
    */
-  public static function requestData( $url, $queryStr = '' ): Collection {
-    if ( $queryStr !== '' ) {
-      $url .= "?$queryStr";
-    }
-
-    return collect( file_get_contents( $url, false ) );
+  public static function requestData( $url ): Collection {
+    return collect( file_get_contents( $url ) );
   }
-
-  /**
-   * @param        $url
-   * @param string $queryStr
-   * @param bool   $isCollectAll
-   *
-   * @return array
-   */
-//  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
-//    $results = [];
-//    $collection = json_decode( self::requestData( $url )[0] );
-//
-//    if ( $isCollectAll ) {
-//      $results[] = $collection->results;
-//
-//      while ( $collection->next !== null && $collection->next !== '' ) {
-//        $url = $collection->next;
-//        $collection = json_decode( self::requestData( $url )[0] );
-//
-//        $results[] = $collection->results;
-//      }
-//    }
-//
-//    return $results;
-//  }
 
   /**
    * @param Collection $data
    * @param            $modelClass
    *
-   * @param bool       $hasResults
-   *
    * @return array
    */
-  public static function hydrateData( Collection $data, $modelClass, bool $hasResults = true ): array {
+  public static function hydrateData( Collection $data, $modelClass ): array {
     $obj = [];
+    $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
     try {
-      $dataArr = self::getJsonResultsAsArray( $data, $hasResults );
+      $dataArr = json_decode( $data[ 0 ], true )[ 'results' ];
 
       foreach ( $dataArr as $i => $iValue ) {
-        $obj[] = self::deserializeObj( $dataArr[ $i ], $modelClass );
+        $obj[] = self::deserializeObj( $serializer, $iValue, $modelClass );
       }
     } catch ( \Exception $ex ) {
       return [];
@@ -72,48 +41,29 @@ abstract class Helper {
     return $obj;
   }
 
-  public static function hydrateDataFromArray( array $data, $modelClass ): array {
-    $obj = [];
-
-    try {
-      foreach ( $data as $i => $iValue ) {
-        //$obj[] = self::deserializeObj( get_object_vars( $data[ $i ] ), $modelClass );
-
-        $character = self::deserializeObj( get_object_vars( $data[ $i ] ), $modelClass );
-        //$character->hydrate();
-
-        $obj[] = $character;
-      }
-    } catch ( \Exception $ex ) {
-      return [];
-    }
-
-    return $obj;
-  }
+  //public static function hydrateDataFromArray( array $data, $modelClass ): array {
+  //  $obj = [];
+  //  $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
+  //
+  //  try {
+  //    foreach ( $data as $i => $iValue ) {
+  //      $obj[] = self::deserializeObj( $serializer, get_object_vars( $iValue ), $modelClass );
+  //    }
+  //  } catch ( \Exception $ex ) {
+  //    return [];
+  //  }
+  //
+  //  return $obj;
+  //}
 
   /**
-   * @param Collection $data
-   * @param bool       $hasResults
-   *
-   * @return array
-   */
-  public static function getJsonResultsAsArray( Collection $data, bool $hasResults = true ): array {
-    $result = json_decode( json_decode( $data, true )[ 0 ], true );
-
-    return $hasResults ? $result[ 'results' ] : $result;
-  }
-
-  /**
-   * @param array $data
-   * @param       $modelClass
+   * @param Serializer $serializer
+   * @param array      $data
+   * @param            $modelClass
    *
    * @return object
    */
-  public static function deserializeObj( array $data, $modelClass ) {
-    $encoders = [ new JsonEncoder() ];
-    $normalizers = [ new ObjectNormalizer() ];
-    $serializer = new Serializer( $normalizers, $encoders );
-
+  public static function deserializeObj( Serializer $serializer, array $data, $modelClass ) {
     return $serializer->deserialize( json_encode( $data, JSON_UNESCAPED_SLASHES ), $modelClass, 'json' );
   }
 
@@ -126,11 +76,13 @@ abstract class Helper {
    */
   public static function hydrateModel( array $urls, $modelClass, bool $isSingleResult = false ) {
     $results = [];
+    $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
     foreach ( $urls as $url ) {
       $data = self::requestData( $url );
-      $arr = self::getJsonResultsAsArray( $data, false );
-      $results[] = self::deserializeObj( $arr, $modelClass );
+      //$arr = self::getJsonResultsAsArray( $data, false );
+      $arr = json_decode( $data[ 0 ], true );
+      $results[] = self::deserializeObj( $serializer, $arr, $modelClass );
     }
 
     if ( $isSingleResult && \count( $results ) > 0 ) {
@@ -150,7 +102,7 @@ abstract class Helper {
 
 //\define( 'BASE_ASSETS_HOST', $isLocal ? '/firespring-proj/public/' : '/' );
 \define( 'BASE_ASSETS_HOST', '/' );
-\define( 'BASE_URL', 'https://swapi.co/api/' );
+\define( 'BASE_URL', env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) );
 \define( 'URL_PEOPLE', BASE_URL . 'people' );
 \define( 'URL_PLANET', BASE_URL . 'planets' );
 \define( 'URL_FILM', BASE_URL . 'films' );

@@ -18,83 +18,29 @@ class StarWarsController extends Controller {
    * @return View
    */
   public function index(): View {
-    $characters = [];
+    $characterList = [];
 
-    try {
-      $collection = json_decode( Helper::requestData( URL_PEOPLE )[ 0 ] );
-      $results[] = $collection->results;
-
-      while ( $collection->next !== null && $collection->next !== '' ) {
-        $url = $collection->next;
-        $collection = json_decode( Helper::requestData( $url )[ 0 ] );
-        $results[] = $collection->results;
-      }
-
-      //$characters = Helper::hydrateData( new Collection( flatten( $results ) ), Character::class, false );
-      $characters = Helper::hydrateDataFromArray( flatten( $results ), Character::class );
-
-      //foreach ( $characters as $character ) {
-      //  $character->hydrate();
-      //}
-
-      ////$data = ( new Collection( flatten( $results ) ) )->map( function ( $result ) {
-      ////$data = map( flatten( $results ), function ( $result ) {
-      //$data = map( flatten( $results ), function ( $result ) {
-      //  //dd(get_object_vars($result));
-      //  //$character = new Character( get_object_vars( $result ) );
-      //  $character->hydrate();
-      //
-      //  dd($character);
-      //
-      //  return $character;
-      //  //return [
-      //  //  $result->name => ( new Collection( $result->residents ) )->map( function ( $resident ) {
-      //  //    return json_decode( collect( file_get_contents( $resident ) )[ 0 ] )->name;
-      //  //  } )
-      //  //];
-      //} );
-    } catch ( \Exception $ex ) {
-      dd( $ex );
-    }
-
-    /*//$collection = json_decode( Helper::requestData( URL_PLANET )[ 0 ] );
-    $data = Helper::requestData( URL_PEOPLE );
-    $collection = json_decode( $data[ 0 ] );
-    //$results[] = $collection->results;
-    //$results[] = Helper::hydrateData( $collection, Character::class );
-
-    $characters = Helper::hydrateData( $data, Character::class );
-
-    foreach ( $characters as $character ) {
-      $character->hydrate();
-    }
-
-    $results[] = $characters;
-    //$results[] = \_\each($characters, function($character) {
-    //  $character->hydrate();
-    //});
-
-    while ( $collection->next !== null && $collection->next !== '' ) {
-      $url = $collection->next;
-      //$collection = json_decode( Helper::requestData( $url )[ 0 ] );
-      $data = Helper::requestData( $url );
-      $collection = json_decode( $data[ 0 ] );
-      //$results[] = $collection->results;
-      //$results[] = Helper::hydrateData( $collection, Character::class );
+    $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
+    do {
+      $data = Helper::requestData( $nextUrl );
+      $nextUrl = json_decode( $data[ 0 ] )->next ?? '';
       $characters = Helper::hydrateData( $data, Character::class );
+      $characterList[] = $characters;
+    } while ( $nextUrl !== null && $nextUrl !== '' );
 
-      foreach ( $characters as $character ) {
-        $character->hydrate();
-      }
+    set_time_limit( 75 ); // OPTIMIZE: Remove this after optimization so call does not take as long!!!
 
-      $results[] = $characters;
-      //$results[] = \_\each($characters, function($character) {
-      //  $character->hydrate();
-      //});
-    }*/
+    $characterListFlat = flatten( $characterList );
+    $characterList = map( $characterListFlat, function ( $character ) {
+      $character->homeworld = json_decode( Helper::requestData( $character->homeworld )[ 0 ] )->name;
+      $character->species = \count( $character->species ) > 0
+        ? json_decode( Helper::requestData( $character->species[ 0 ] )[ 0 ] )->name
+        : '';
 
-    return view( 'layouts.characters', [ 'characters' => $characters ] );
-    //return view( 'layouts.characters', [ 'characters' => $results ] );
+      return $character;
+    } );
+
+    return view( 'layouts.characters', [ 'characters' => flatten( $characterList ) ] );
   }
 
   /**
@@ -106,7 +52,7 @@ class StarWarsController extends Controller {
     $character = null;
 
     try {
-      $data = Helper::requestData( URL_PEOPLE, "search=$name" );
+      $data = Helper::requestData( URL_PEOPLE . "?search=$name" );
       $characters = Helper::hydrateData( $data, Character::class );
 
       if ( $characters !== null && \count( $characters ) > 0 ) {
