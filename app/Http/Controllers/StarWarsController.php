@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use function _\flatten;
 use function _\internal\baseFlatten;
-use function _\map;
 use App\Helper;
 use App\Models\Character;
 use Exception;
@@ -19,26 +18,13 @@ class StarWarsController extends Controller {
    * @return View
    */
   public function index(): View {
-    $characterNames = [];
+    $characterNames = Helper::getCharacterNames();
 
-    try {
-      $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
-
-      do {
-        $data = json_decode( Helper::requestData( $nextUrl )[ 0 ] );
-        $nextUrl = $data->next ?? '';
-        $results = $data->results;
-        $characterNames[] = map($results, function($result) {
-          return $result->name;
-        });
-      } while ( $nextUrl !== null && $nextUrl !== '' );
-
-      $characterNames = flatten( $characterNames );
-    } catch (\Exception $ex) {
-      dd($ex);
-    }
-
-    return view( 'layouts.character', [ 'characterNames' => $characterNames, 'character' => null ] );
+    return view( 'layouts.character', [
+      'characterNames' => $characterNames,
+      'character'      => null,
+      'emptySetInfo'   => 'Please select a character from the dropdown.'
+    ] );
   }
 
   /**
@@ -46,24 +32,36 @@ class StarWarsController extends Controller {
    *
    * @return View
    */
-  public function character( string $name ): View {
+  public function character( string $name = '' ): View {
+    $characterNames = Helper::getCharacterNames();
     $character = null;
+    $emptySetInfo = null;
 
-    try {
-      $data = Helper::requestData( URL_PEOPLE . "?search=$name" );
-      $characters = Helper::hydrateData( $data, Character::class );
+    if ( $name !== '' ) {
+      try {
+        $data = Helper::requestData( URL_PEOPLE . "?search=$name" );
+        $characters = Helper::hydrateData( $data, Character::class );
 
-      if ( $characters !== null && \count( $characters ) > 0 ) {
-        $character = $characters[ 0 ];
-        $character->hydrate();
+        if ( $characters !== null && \count( $characters ) > 0 ) {
+          $character = (object) $characters[ 0 ];
+          $character->hydrate();
+        }
+
+        if ( $character === null ) {
+          throw( new Exception( 'Character not found' ) );
+        }
+      } catch ( Exception $ex ) {
+        $emptySetInfo = "Sorry, no results were found for '$name'.";
       }
-    } catch ( Exception $ex ) {
-      logger( $ex->getMessage() );
+    } else {
+      $emptySetInfo = 'Sorry, no results were found. You must search for a characters name.';
     }
 
     return view( 'layouts.character', [
-      'characterNames' => null,
-      'character' => $character
+      'characterNames'     => $characterNames,
+      'character'          => $character,
+      'emptySetInfo'       => $emptySetInfo,
+      'emptySetHeaderShow' => true
     ] );
   }
 
@@ -72,21 +70,25 @@ class StarWarsController extends Controller {
    */
   public function characters(): View {
     $characterList = [];
+    $emptySetInfo = null;
 
-    $time_start = microtime(true); // TODO: REMOVE ME --> DEBUGGING
+    try {
+      $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
+      do {
+        $data = Helper::requestData( $nextUrl );
+        $nextUrl = json_decode( $data[ 0 ] )->next ?? '';
+        $characters = Helper::hydrateData( $data, Character::class, true );
+        $characterList[] = $characters;
+      } while ( $nextUrl !== null && $nextUrl !== '' );
+    } catch ( \Exception $ex ) {
+//      $emptySetInfo = null;
+    }
 
-    $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
-    do {
-      $data = Helper::requestData( $nextUrl );
-      $nextUrl = json_decode( $data[ 0 ] )->next ?? '';
-      $characters = Helper::hydrateData( $data, Character::class, true );
-      $characterList[] = $characters;
-    } while ( $nextUrl !== null && $nextUrl !== '' );
-
-    $time_end = microtime(true); // TODO: REMOVE ME --> DEBUGGING
-    echo $time_end - $time_start; // TODO: REMOVE ME --> DEBUGGING
-
-    return view( 'layouts.characters', [ 'characters' => baseFlatten( $characterList, 2 ) ] );
+    return view( 'layouts.characters', [
+      'characters'         => baseFlatten( $characterList, 2 ),
+      'emptySetInfo'       => $emptySetInfo,
+      'emptySetHeaderShow' => true
+    ] );
   }
 
   /**

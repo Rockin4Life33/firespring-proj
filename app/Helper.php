@@ -2,6 +2,8 @@
 
 namespace App;
 
+use function _\flatten;
+use function _\map;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -88,16 +90,43 @@ abstract class Helper {
     return $results;
   }
 
+  /**
+   * @param bool $isSortNameAsc
+   * @return array
+   */
+  public static function getCharacterNames( bool $isSortNameAsc = true ) {
+    $characterNames = [];
+
+    try {
+      $nextUrl = URL_PEOPLE;
+
+      do {
+        $data = json_decode( Helper::requestData( $nextUrl )[ 0 ] );
+        $nextUrl = $data->next ?? '';
+        $results = $data->results;
+        $characterNames[] = map($results, function($result) {
+          return $result->name;
+        });
+      } while ( $nextUrl !== null && $nextUrl !== '' );
+
+      $characterNames = flatten( $characterNames );
+    } catch (\Exception $ex) {
+      dd($ex);
+    }
+
+    if ( $isSortNameAsc ) {
+      sort( $characterNames );
+    }
+
+    return $characterNames;
+  }
+
 }
 
 //#region  CONSTANTS
 
-//$isLocal = $_SERVER['HTTP_HOST'] === 'localhost' ||
-//           $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ||
-//           $_SERVER['REMOTE_ADDR'] === '::1';
-
-//\define( 'BASE_ASSETS_HOST', $isLocal ? '/firespring-proj/public/' : '/' );
-\define( 'BASE_ASSETS_HOST', '/' );
+//\define( 'BASE_ASSETS_HOST', '/firespring-proj/public/' ); // TODO: Use with XAMPP or if path differs from '/'
+\define( 'BASE_ASSETS_HOST', '/' ); // TODO: Default base path (used with `php artisan serve`)
 \define( 'BASE_URL', env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) );
 \define( 'URL_PEOPLE', BASE_URL . 'people' );
 \define( 'URL_PLANET', BASE_URL . 'planets' );
