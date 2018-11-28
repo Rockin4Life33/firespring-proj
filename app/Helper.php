@@ -34,13 +34,13 @@ abstract class Helper {
     try {
       $dataArr = json_decode( $data[ 0 ], true )[ 'results' ];
 
-      foreach ( $dataArr as $i => $iValue ) {
-        $newObj = self::deserializeObj( $serializer, $iValue, $modelClass );
+      foreach ( $dataArr as $key => $value ) {
+        $newObj = self::deserializeObj( $serializer, $value, $modelClass );
 
         if ( $isAddHomeworldSpecies ) {
-          $newObj->homeworld = json_decode( Helper::requestData( $newObj->homeworld )[ 0 ] )->name;
+          $newObj->homeworld = json_decode( self::requestData( $newObj->homeworld )[ 0 ] )->name;
           $newObj->species = \count( $newObj->species ) > 0
-            ? json_decode( Helper::requestData( $newObj->species[ 0 ] )[ 0 ] )->name
+            ? json_decode( self::requestData( $newObj->species[ 0 ] )[ 0 ] )->name
             : '';
         }
 
@@ -52,21 +52,6 @@ abstract class Helper {
 
     return $obj;
   }
-
-  //public static function hydrateDataFromArray( array $data, $modelClass ): array {
-  //  $obj = [];
-  //  $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
-  //
-  //  try {
-  //    foreach ( $data as $i => $iValue ) {
-  //      $obj[] = self::deserializeObj( $serializer, get_object_vars( $iValue ), $modelClass );
-  //    }
-  //  } catch ( \Exception $ex ) {
-  //    return [];
-  //  }
-  //
-  //  return $obj;
-  //}
 
   /**
    * @param Serializer $serializer

@@ -6,7 +6,7 @@
       <select class="custom-select-lg center-block">
         <option disabled value="#">- - - - - - - - - - -</option>
         @foreach($characterNames as $key => $val)
-          <option id="{{ $key }}" value="{!! \_\split($val, ' ', 1) !!}">{{ $val }}</option>
+          <option id="{{ $key }}" value="{{ \_\split($val, ' ', 1)[ 0 ] }}">{{ $val }}</option>
         @endforeach
       </select>
     </label>
