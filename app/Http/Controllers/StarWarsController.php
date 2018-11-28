@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use function _\flatten;
+use function _\internal\baseFlatten;
 use function _\map;
 use App\Helper;
 use App\Models\Character;
@@ -18,29 +19,26 @@ class StarWarsController extends Controller {
    * @return View
    */
   public function index(): View {
-    $characterList = [];
+    $characterNames = [];
 
-    $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
-    do {
-      $data = Helper::requestData( $nextUrl );
-      $nextUrl = json_decode( $data[ 0 ] )->next ?? '';
-      $characters = Helper::hydrateData( $data, Character::class );
-      $characterList[] = $characters;
-    } while ( $nextUrl !== null && $nextUrl !== '' );
+    try {
+      $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
 
-    set_time_limit( 75 ); // OPTIMIZE: Remove this after optimization so call does not take as long!!!
+      do {
+        $data = json_decode( Helper::requestData( $nextUrl )[ 0 ] );
+        $nextUrl = $data->next ?? '';
+        $results = $data->results;
+        $characterNames[] = map($results, function($result) {
+          return $result->name;
+        });
+      } while ( $nextUrl !== null && $nextUrl !== '' );
 
-    $characterListFlat = flatten( $characterList );
-    $characterList = map( $characterListFlat, function ( $character ) {
-      $character->homeworld = json_decode( Helper::requestData( $character->homeworld )[ 0 ] )->name;
-      $character->species = \count( $character->species ) > 0
-        ? json_decode( Helper::requestData( $character->species[ 0 ] )[ 0 ] )->name
-        : '';
+      $characterNames = flatten( $characterNames );
+    } catch (\Exception $ex) {
+      dd($ex);
+    }
 
-      return $character;
-    } );
-
-    return view( 'layouts.characters', [ 'characters' => flatten( $characterList ) ] );
+    return view( 'layouts.character', [ 'characterNames' => $characterNames, 'character' => null ] );
   }
 
   /**
@@ -63,14 +61,32 @@ class StarWarsController extends Controller {
       logger( $ex->getMessage() );
     }
 
-    return view( 'layouts.character', [ 'character' => $character ] );
+    return view( 'layouts.character', [
+      'characterNames' => null,
+      'character' => $character
+    ] );
   }
 
   /**
    * @return View
    */
   public function characters(): View {
-    return $this->index();
+    $characterList = [];
+
+    $time_start = microtime(true); // TODO: REMOVE ME --> DEBUGGING
+
+    $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
+    do {
+      $data = Helper::requestData( $nextUrl );
+      $nextUrl = json_decode( $data[ 0 ] )->next ?? '';
+      $characters = Helper::hydrateData( $data, Character::class, true );
+      $characterList[] = $characters;
+    } while ( $nextUrl !== null && $nextUrl !== '' );
+
+    $time_end = microtime(true); // TODO: REMOVE ME --> DEBUGGING
+    echo $time_end - $time_start; // TODO: REMOVE ME --> DEBUGGING
+
+    return view( 'layouts.characters', [ 'characters' => baseFlatten( $characterList, 2 ) ] );
   }
 
   /**
@@ -106,7 +122,7 @@ class StarWarsController extends Controller {
       logger( $ex->getMessage() );
     }
 
-    //header( 'Content-type: application/json' );
+    header( 'Content-type: application/json' );
     echo $planetResidents;
   }
 

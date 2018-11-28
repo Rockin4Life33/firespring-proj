@@ -21,10 +21,13 @@ abstract class Helper {
   /**
    * @param Collection $data
    * @param            $modelClass
+   * @param bool       $isAddHomeworldSpecies
    *
    * @return array
    */
-  public static function hydrateData( Collection $data, $modelClass ): array {
+  public static function hydrateData( Collection $data,
+                                      $modelClass,
+                                      bool $isAddHomeworldSpecies = false ): array {
     $obj = [];
     $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
@@ -32,7 +35,16 @@ abstract class Helper {
       $dataArr = json_decode( $data[ 0 ], true )[ 'results' ];
 
       foreach ( $dataArr as $i => $iValue ) {
-        $obj[] = self::deserializeObj( $serializer, $iValue, $modelClass );
+        $newObj = self::deserializeObj( $serializer, $iValue, $modelClass );
+
+        if ( $isAddHomeworldSpecies ) {
+          $newObj->homeworld = json_decode( Helper::requestData( $newObj->homeworld )[ 0 ] )->name;
+          $newObj->species = \count( $newObj->species ) > 0
+            ? json_decode( Helper::requestData( $newObj->species[ 0 ] )[ 0 ] )->name
+            : '';
+        }
+
+        $obj[] = $newObj;
       }
     } catch ( \Exception $ex ) {
       return [];
@@ -80,7 +92,6 @@ abstract class Helper {
 
     foreach ( $urls as $url ) {
       $data = self::requestData( $url );
-      //$arr = self::getJsonResultsAsArray( $data, false );
       $arr = json_decode( $data[ 0 ], true );
       $results[] = self::deserializeObj( $serializer, $arr, $modelClass );
     }

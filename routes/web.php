@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get( '/', 'StarWarsController@index' )->name( 'starwars.index' );
 
-Route::get( '/character/{name}', 'StarWarsController@character' )->name( 'starwars.character' );
+Route::prefix( '/character' )->group( function () {
+  Route::get( '', 'StarWarsController@character' )->name( 'starwars.index' );
+  Route::get( '/{name}', 'StarWarsController@character' )->name( 'starwars.character' );
+} );
 
 Route::get( '/characters', 'StarWarsController@characters' )->name( 'starwars.characters' );
 
