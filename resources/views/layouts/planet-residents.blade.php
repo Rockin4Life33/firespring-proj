@@ -2,7 +2,7 @@
 
 @section('content')
   @if ($planetResidents !== null)
-    <pre>{{ $planetResidents }}</pre>
+    <pre>{!! $planetResidents !!}</pre>
   @endif
 
   @if ($next !== null || $previous !== null)

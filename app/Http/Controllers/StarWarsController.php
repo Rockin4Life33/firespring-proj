@@ -69,12 +69,10 @@ class StarWarsController extends Controller {
   /**
    * @return View
    */
-  public function characters(): View {
+  public function charactersAlt(): View {
     $characterList = [];
     $emptySetInfo = null;
-    $maxCharacters = 50;
-
-    $time_start = microtime( true ); // TODO: REMOVE ME --> DEBUGGING
+    $maxCharacters = 30;
 
     try {
       $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
@@ -84,20 +82,40 @@ class StarWarsController extends Controller {
         $nextUrl = json_decode( $data )->next ?? '';
         $characters = Helper::hydrateData( $data, Character::class, true );
         $characterList[] = flatten( $characters );
-        $maxCharacters -= 10; // To stop at 50 results
+        $maxCharacters -= 10;
       } while ( $maxCharacters > 0 && ( $nextUrl !== null && $nextUrl !== '' ) );
     } catch ( \Exception $ex ) {
       $emptySetInfo = null;
     }
 
-    $time_end = microtime( true ); // TODO: REMOVE ME --> DEBUGGING
-    echo $time_end - $time_start; // TODO: REMOVE ME --> DEBUGGING
-
-    return view( 'layouts.characters', [
+    return view( 'layouts.charactersAlt', [
       'characters'         => flatten( $characterList ),
       'emptySetInfo'       => $emptySetInfo,
       'emptySetHeaderShow' => true
     ] );
+  }
+
+  public function characters(): View {
+    try {
+      $queryString = request()->getQueryString();
+      $results = $queryString
+        ? Helper::requestData( URL_PEOPLE . "?$queryString" )
+        : Helper::requestData( URL_PEOPLE );
+
+      $characters = Helper::hydrateData( $results, Character::class, true );
+
+      $results = json_decode( $results );
+
+      return view( 'layouts.characters', [
+        'next'               => $results->next ? parse_url( $results->next, PHP_URL_QUERY ) : null,
+        'previous'           => $results->previous ? parse_url( $results->previous, PHP_URL_QUERY ) : null,
+        'characters'         => flatten( $characters ),
+        'emptySetInfo'       => null,
+        'emptySetHeaderShow' => true
+      ] );
+    } catch ( \Exception $ex ) {
+      dd( $ex ); // NOTE: Debugging only -> Not for prod
+    }
   }
 
   /**
@@ -128,7 +146,11 @@ class StarWarsController extends Controller {
         'planetResidents' => json_encode( $planetResidents, $options )
       ] );
     } catch ( \Exception $ex ) {
-      dd( $ex ); // NOTE: Debugging only -> Not for prod
+      return view( 'layouts.planet-residents', [
+        'next'            => null,
+        'previous'        => null,
+        'planetResidents' => 'Sorry, no results found.'
+      ] );
     }
   }
 

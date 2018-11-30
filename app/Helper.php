@@ -38,9 +38,9 @@ abstract class Helper {
 
         if ( $isAddHomeworldSpecies ) {
           $newObj->homeworld = json_decode( self::requestData( $newObj->homeworld ) )->name;
-          //  $newObj->species = \count( $newObj->species ) > 0
-          //    ? json_decode( self::requestData( $newObj->species[ 0 ] ) )->name
-          //    : '';
+            $newObj->species = \count( $newObj->species ) > 0
+              ? json_decode( self::requestData( $newObj->species[ 0 ] ) )->name
+              : '';
         }
 
         $obj[] = $newObj;

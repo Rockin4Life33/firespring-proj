@@ -2,11 +2,7 @@
 
 @section('content')
   @if($characters !== null && count($characters) > 0)
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-
-    <table id="characters" class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">
+    <table id="characters" class="table table-striped table-bordered" cellspacing="0" width="100%">
       <thead>
         <tr>
           <th>Name</th>
@@ -17,7 +13,7 @@
           <th>Mass</th>
           <th>Skin Color</th>
           <th>Home World</th>
-          {{--<th>Species</th>--}}
+          <th>Species</th>
           <th>Film Count</th>
           <th>Starship Count</th>
           <th>Vehicle Count</th>
@@ -39,31 +35,27 @@
             <th>{{ $character->mass }}</th>
             <th>{{ $character->skin_color }}</th>
             <th>{{ $character->homeworld ?? '' }}</th>
-            {{--<th>{{ $character->species }}</th>--}}
+            <th>{{ $character->species }}</th>
             <th>{{ \count($character->films) }}</th>
             <th>{{ \count($character->starships) }}</th>
             <th>{{ \count($character->vehicles) }}</th>
           </tr>
         @endforeach
       </tbody>
-
-      <tfoot>
-        <tr>
-          <th>Name</th>
-          <th>Birth Year</th>
-          <th>Gender</th>
-          <th>Hair Color</th>
-          <th>Height</th>
-          <th>Mass</th>
-          <th>Skin Color</th>
-          <th>Home World</th>
-          {{--<th>Species</th>--}}
-          <th>Film Count</th>
-          <th>Starship Count</th>
-          <th>Vehicle Count</th>
-        </tr>
-      </tfoot>
     </table>
+    <br />
+    @if ($next !== null || $previous !== null)
+      <br />
+      <div class="text-center">
+        @if ($previous !== null)
+          <a href="{{ route('starwars.characters', $previous) }}">&laquo; &nbsp; Previous &nbsp;</a>
+        @endif
+        &nbsp;
+        @if ($next !== null)
+          <a href="{{ route('starwars.characters', $next) }}">&nbsp; Next &nbsp; &raquo;</a>
+        @endif
+      </div>
+    @endif
   @else
     @includeIf('partials._empty-data-set')
   @endif
@@ -73,53 +65,11 @@
   @if($characters !== null && count($characters) > 0)
     <script>
       $( document ).ready( () => {
-        $( '#characters' ).DataTable( {} );
+        $( '#characters' ).DataTable( {
+          'searching': false
+        } );
+        $( '#characters_wrapper' ).children( 0 )[ 0 ].remove();
       } );
     </script>
-
-    <style>
-      table.dataTable thead .sorting:before,
-      table.dataTable thead .sorting:after,
-      table.dataTable thead .sorting_asc:before,
-      table.dataTable thead .sorting_asc:after,
-      table.dataTable thead .sorting_desc:before,
-      table.dataTable thead .sorting_desc:after {
-        padding: 5px;
-      }
-
-      .dataTables_wrapper .mdb-select {
-        border: none;
-      }
-
-      .dataTables_wrapper .mdb-select.form-control {
-        padding-top: 0;
-        margin-top: -1rem;
-        margin-left: 0.7rem;
-        margin-right: 0.7rem;
-        width: 100px;
-      }
-
-      .dataTables_length label {
-        display: flex;
-        justify-content: left;
-      }
-
-      .dataTables_filter label {
-        margin-bottom: 0;
-      }
-
-      .dataTables_filter label input.form-control {
-        margin-top: -0.6rem;
-        padding-bottom: 0;
-      }
-
-      table.dataTable {
-        margin-bottom: 3rem !important;
-      }
-
-      div.dataTables_wrapper div.dataTables_info {
-        padding-top: 0;
-      }
-    </style>
   @endif
 @endsection
