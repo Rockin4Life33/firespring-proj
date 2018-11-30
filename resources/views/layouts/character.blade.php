@@ -3,7 +3,7 @@
 @section('content')
   @if($characterNames !== null)
     <label>
-      <select id="characterDropdown" class="custom-select-lg">
+      <select id="character-dropdown" class="custom-select-lg">
         <option disabled selected value="#">- - - - - - - - - - -</option>
         @foreach($characterNames as $key => $val)
           <option id="{{ $key }}" value="{{ \_\split($val, ' ', 1)[ 0 ] }}">{{ $val }}</option>
@@ -22,9 +22,10 @@
 @section('scripts')
   <script>
     $(document).ready(() => {
-      const dropdown = document.getElementById('characterDropdown');
+      const dropdown = document.getElementById('character-dropdown');
       dropdown.addEventListener('change', (e) => {
-        const url = window.location.origin + '/character/';
+        // const url = window.location.origin + '/character/'; // TODO: Use with root as '/'
+        const url = window.location.origin + '{{ BASE_ASSETS_HOST }}character/'; // TODO: Use when root is not '/'. Tweak BASE_ASSETS_HOST as needed
         window.location.assign(url + e.target.selectedOptions[0].value);
       });
     });

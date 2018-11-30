@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
 
 {{-- STYLES --}}
-<link rel="stylesheet" href="{{ BASE_ASSETS_HOST }}css/app.css">
+<link rel="stylesheet" href="{{ env('BASE_ASSETS_HOST') }}css/app.css">
 
 {{-- SCRIPTS --}}
-<script type="text/javascript" src="{{ BASE_ASSETS_HOST }}js/app.js"></script>
+<script type="text/javascript" src="{{ env('BASE_ASSETS_HOST') }}js/app.js"></script>

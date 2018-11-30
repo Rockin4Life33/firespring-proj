@@ -4,7 +4,6 @@ namespace App;
 
 use function _\flatten;
 use function _\map;
-use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -12,38 +11,36 @@ use Symfony\Component\Serializer\Serializer;
 abstract class Helper {
 
   /**
-   * @param        $url
+   * @param $url
    *
-   * @return Collection
+   * @return bool|string
    */
-  public static function requestData( $url ): Collection {
-    return collect( file_get_contents( $url ) );
+  public static function requestData( $url ) {
+    return file_get_contents( $url );
   }
 
   /**
-   * @param Collection $data
+   * @param            $data
    * @param            $modelClass
    * @param bool       $isAddHomeworldSpecies
    *
    * @return array
    */
-  public static function hydrateData( Collection $data,
-                                      $modelClass,
-                                      bool $isAddHomeworldSpecies = false ): array {
+  public static function hydrateData( $data, $modelClass, bool $isAddHomeworldSpecies = false ): array {
     $obj = [];
     $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
     try {
-      $dataArr = json_decode( $data[ 0 ], true )[ 'results' ];
+      $dataArr = json_decode( $data )->results;
 
       foreach ( $dataArr as $key => $value ) {
         $newObj = self::deserializeObj( $serializer, $value, $modelClass );
 
         if ( $isAddHomeworldSpecies ) {
-          $newObj->homeworld = json_decode( self::requestData( $newObj->homeworld )[ 0 ] )->name;
-          $newObj->species = \count( $newObj->species ) > 0
-            ? json_decode( self::requestData( $newObj->species[ 0 ] )[ 0 ] )->name
-            : '';
+          $newObj->homeworld = json_decode( self::requestData( $newObj->homeworld ) )->name;
+          //  $newObj->species = \count( $newObj->species ) > 0
+          //    ? json_decode( self::requestData( $newObj->species[ 0 ] ) )->name
+          //    : '';
         }
 
         $obj[] = $newObj;
@@ -57,12 +54,12 @@ abstract class Helper {
 
   /**
    * @param Serializer $serializer
-   * @param array      $data
+   * @param            $data
    * @param            $modelClass
    *
    * @return object
    */
-  public static function deserializeObj( Serializer $serializer, array $data, $modelClass ) {
+  public static function deserializeObj( Serializer $serializer, $data, $modelClass ) {
     return $serializer->deserialize( json_encode( $data, JSON_UNESCAPED_SLASHES ), $modelClass, 'json' );
   }
 
@@ -79,7 +76,7 @@ abstract class Helper {
 
     foreach ( $urls as $url ) {
       $data = self::requestData( $url );
-      $arr = json_decode( $data[ 0 ], true );
+      $arr = json_decode( $data, true );
       $results[] = self::deserializeObj( $serializer, $arr, $modelClass );
     }
 
@@ -92,26 +89,27 @@ abstract class Helper {
 
   /**
    * @param bool $isSortNameAsc
+   *
    * @return array
    */
-  public static function getCharacterNames( bool $isSortNameAsc = true ) {
+  public static function getCharacterNames( bool $isSortNameAsc = true ): array {
     $characterNames = [];
 
     try {
       $nextUrl = URL_PEOPLE;
 
       do {
-        $data = json_decode( Helper::requestData( $nextUrl )[ 0 ] );
+        $data = json_decode( self::requestData( $nextUrl ) );
         $nextUrl = $data->next ?? '';
         $results = $data->results;
-        $characterNames[] = map($results, function($result) {
+        $characterNames[] = map( $results, function ( $result ) {
           return $result->name;
-        });
+        } );
       } while ( $nextUrl !== null && $nextUrl !== '' );
 
       $characterNames = flatten( $characterNames );
-    } catch (\Exception $ex) {
-      dd($ex);
+    } catch ( \Exception $ex ) {
+      dd( $ex );
     }
 
     if ( $isSortNameAsc ) {

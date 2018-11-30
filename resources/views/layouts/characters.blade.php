@@ -2,9 +2,7 @@
 
 @section('content')
   @if($characters !== null && count($characters) > 0)
-    <link rel="stylesheet"
-          type="text/css"
-          href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
 
@@ -19,7 +17,7 @@
           <th>Mass</th>
           <th>Skin Color</th>
           <th>Home World</th>
-          <th>Species</th>
+          {{--<th>Species</th>--}}
           <th>Film Count</th>
           <th>Starship Count</th>
           <th>Vehicle Count</th>
@@ -41,7 +39,7 @@
             <th>{{ $character->mass }}</th>
             <th>{{ $character->skin_color }}</th>
             <th>{{ $character->homeworld ?? '' }}</th>
-            <th>{{ $character->species }}</th>
+            {{--<th>{{ $character->species }}</th>--}}
             <th>{{ \count($character->films) }}</th>
             <th>{{ \count($character->starships) }}</th>
             <th>{{ \count($character->vehicles) }}</th>
@@ -59,7 +57,7 @@
           <th>Mass</th>
           <th>Skin Color</th>
           <th>Home World</th>
-          <th>Species</th>
+          {{--<th>Species</th>--}}
           <th>Film Count</th>
           <th>Starship Count</th>
           <th>Vehicle Count</th>
