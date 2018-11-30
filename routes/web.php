@@ -17,7 +17,7 @@ Route::get( '/', 'StarWarsController@index' )->name( 'starwars.index' );
 
 Route::prefix( '/character' )->group( function () {
   Route::get( '', 'StarWarsController@character' )->name( 'starwars.index' );
-  Route::get( '/{name}', 'StarWarsController@character' )->name( 'starwars.character' );
+  Route::get( '/{name?}', 'StarWarsController@character' )->name( 'starwars.character' );
 } );
 
 Route::get( '/characters', 'StarWarsController@characters' )->name( 'starwars.characters' );
@@ -27,4 +27,4 @@ Route::get( '/planet-residents', 'StarWarsController@planetResidents' )->name( '
 
 Route::get( '/about', function () {
   return view( 'layouts.about' );
-} );
+} )->name( 'starwars.about' );
