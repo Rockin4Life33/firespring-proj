@@ -3,31 +3,29 @@
 namespace App\Http\Controllers;
 
 use function _\flatten;
+use function _\map;
+use function _\split;
 use App\Helper;
 use App\Models\Character;
 use Exception;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use PHPUnit\Util\Printer;
 
-
-class StarWarsController extends Controller
-{
+class StarWarsController extends Controller {
 
   /**
    * Display a listing of the resource.
    *
    * @return View
    */
-  public function index(): View
-  {
-    $data = Helper::requestData( URL_PEOPLE );
-    $characters = Helper::hydrateData( $data, Character::class );
+  public function index(): View {
+    $characterNames = Helper::getCharacterNames();
 
-    foreach ( $characters as $character ) {
-      $character->hydrate();
-    }
-
-    return view( 'layouts.characters', ['characters' => $characters] );
+    return view( 'layouts.character', [
+      'characterNames' => $characterNames,
+      'character'      => null,
+      'emptySetInfo'   => 'Please select a character from the dropdown.'
+    ] );
   }
 
   /**
@@ -35,68 +33,125 @@ class StarWarsController extends Controller
    *
    * @return View
    */
-  public function character( string $name ): View
-  {
-    /** @var Character $character */
+  public function character( string $name = '' ): View {
+    $characterNames = Helper::getCharacterNames();
     $character = null;
+    $emptySetInfo = null;
 
-    try {
-      $data = Helper::requestData( URL_PEOPLE, "search=$name" );
-      $characters = Helper::hydrateData( $data, Character::class );
+    if ( $name !== '' ) {
+      try {
+        $data = Helper::requestData( URL_PEOPLE . "?search=$name" );
+        $characters = Helper::hydrateData( $data, Character::class );
 
-      if ( $characters !== null && \count( $characters ) > 0 ) {
-        $character = $characters[ 0 ];
-        $character->hydrate();
+        if ( $characters !== null && \count( $characters ) > 0 ) {
+          $character = (object) $characters[ 0 ];
+          $character->hydrate();
+        }
+
+        if ( $character === null ) {
+          throw new \RuntimeException( 'Character not found' );
+        }
+      } catch ( \Exception $ex ) {
+        $emptySetInfo = "Sorry, no results were found for '$name'.";
       }
-    } catch ( Exception $ex ) {
-      logger( $ex->getMessage() );
+    } else {
+      $emptySetInfo = 'Sorry, no results were found. You must search for a characters name.';
     }
 
-    return view( 'layouts.character', ['character' => $character] );
+    return view( 'layouts.character', [
+      'characterNames'     => $characterNames,
+      'character'          => $character,
+      'emptySetInfo'       => $emptySetInfo,
+      'emptySetHeaderShow' => true
+    ] );
   }
 
   /**
    * @return View
    */
-  public function characters(): View
-  {
-    return $this->index();
+  public function charactersAlt(): View {
+    $characterList = [];
+    $emptySetInfo = null;
+    $maxCharacters = 30;
+
+    try {
+      $nextUrl = env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) . 'people';
+
+      do {
+        $data = Helper::requestData( $nextUrl );
+        $nextUrl = json_decode( $data )->next ?? '';
+        $characters = Helper::hydrateData( $data, Character::class, true );
+        $characterList[] = flatten( $characters );
+        $maxCharacters -= 10;
+      } while ( $maxCharacters > 0 && ( $nextUrl !== null && $nextUrl !== '' ) );
+    } catch ( \Exception $ex ) {
+      $emptySetInfo = null;
+    }
+
+    return view( 'layouts.charactersAlt', [
+      'characters'         => flatten( $characterList ),
+      'emptySetInfo'       => $emptySetInfo,
+      'emptySetHeaderShow' => true
+    ] );
+  }
+
+  public function characters(): View {
+    try {
+      $queryString = request()->getQueryString();
+      $results = $queryString
+        ? Helper::requestData( URL_PEOPLE . "?$queryString" )
+        : Helper::requestData( URL_PEOPLE );
+
+      $characters = Helper::hydrateData( $results, Character::class, true );
+
+      $results = json_decode( $results );
+
+      return view( 'layouts.characters', [
+        'next'               => $results->next ? parse_url( $results->next, PHP_URL_QUERY ) : null,
+        'previous'           => $results->previous ? parse_url( $results->previous, PHP_URL_QUERY ) : null,
+        'characters'         => flatten( $characters ),
+        'emptySetInfo'       => null,
+        'emptySetHeaderShow' => true
+      ] );
+    } catch ( \Exception $ex ) {
+      dd( $ex ); // NOTE: Debugging only -> Not for prod
+    }
   }
 
   /**
    * Return the raw JSON of [ PlanetName: [ planetResidentName ] ]
-   *
    * Lack of any Auth or security due to the nature of this being a code test...
+   *
+   * @return \Illuminate\Contracts\View\Factory|View
    */
-  public function planetResidents(): void
-  {
-    $planetResidents = null;
-    $results = [];
+  public function planetResidents() {
     $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
     try {
-      $collection = json_decode( Helper::requestData( URL_PLANET )[ 0 ] );
-      $results[] = $collection->results;
-
-      while ( $collection->next !== null && $collection->next !== '' ) {
-        $url = $collection->next;
-        $collection = json_decode( Helper::requestData( $url )[ 0 ] );
-        $results[] = $collection->results;
-      }
-
-      $data = ( new Collection( flatten( $results ) ) )->map( function ( $result ) {
-        return [$result->name => ( new Collection( $result->residents ) )->map( function ( $resident ) {
-          return json_decode( collect( file_get_contents( $resident ) )[ 0 ] )->name;
-        } )];
+      $queryString = request()->getQueryString();
+      $results = $queryString
+        ? json_decode( Helper::requestData( URL_PLANET . "?$queryString" ) )
+        : json_decode( Helper::requestData( URL_PLANET ) );
+      $planetResidents = map( $results->results, function ( $result ) {
+        return [
+          $result->name => map( $result->residents, function ( $resident ) {
+            return json_decode( file_get_contents( $resident ) )->name;
+          } )
+        ];
       } );
 
-      $planetResidents = json_encode( $data, $options );
-    } catch ( Exception $ex ) {
-      logger( $ex->getMessage() );
+      return view( 'layouts.planet-residents', [
+        'next'            => $results->next ? parse_url( $results->next, PHP_URL_QUERY ) : null,
+        'previous'        => $results->previous ? parse_url( $results->previous, PHP_URL_QUERY ) : null,
+        'planetResidents' => json_encode( $planetResidents, $options )
+      ] );
+    } catch ( \Exception $ex ) {
+      return view( 'layouts.planet-residents', [
+        'next'            => null,
+        'previous'        => null,
+        'planetResidents' => 'Sorry, no results found.'
+      ] );
     }
-
-    header( 'Content-type: application/json' );
-    echo $planetResidents;
   }
 
 }
