@@ -2,7 +2,8 @@
 
 namespace App;
 
-use Illuminate\Support\Collection;
+use function _\flatten;
+use function _\map;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -10,67 +11,41 @@ use Symfony\Component\Serializer\Serializer;
 abstract class Helper {
 
   /**
-   * @param        $url
-   * @param string $queryStr
+   * @param $url
    *
-   * @return Collection
+   * @return bool|string
    */
-  public static function requestData( $url, $queryStr = '' ): Collection {
-    if ( $queryStr !== '' ) {
-      $url .= "?$queryStr";
-    }
-
-    return collect( file_get_contents( $url, false ) );
+  public static function requestData( $url ) {
+    return file_get_contents( $url );
   }
 
   /**
-   * @param        $url
-   * @param string $queryStr
-   * @param bool   $isCollectAll
-   *
-   * @return array
-   */
-  public static function getDataCollection( $url, $queryStr = '', bool $isCollectAll = false ) {
-    $results = [];
-
-    if ( $queryStr !== '' ) {
-      $url .= "?$queryStr";
-    }
-
-    $collection = collect( file_get_contents( $url, false ) );
-
-    if ( $isCollectAll ) {
-      while ( $collection->has( 'next' ) && $collection->get( 'next' ) !== null ) {
-        $url = $collection->get( 'next' ) . "?$queryStr";
-        $collection = collect( file_get_contents( $url, false ) );
-
-        $results[] = $collection; // TODO: Iterate over $collection and place each value into $results[]
-      }
-    }
-
-    return $results;
-  }
-
-  /**
-   * @param Collection $data
+   * @param            $data
    * @param            $modelClass
-   *
-   * @param bool       $hasResults
+   * @param bool       $isAddHomeworldSpecies
    *
    * @return array
    */
-  public static function hydrateData( Collection $data, $modelClass, bool $hasResults = true ): array {
+  public static function hydrateData( $data, $modelClass, bool $isAddHomeworldSpecies = false ): array {
     $obj = [];
+    $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
     try {
-      $dataArr = self::getJsonResultsAsArray( $data, $hasResults );
+      $dataArr = json_decode( $data )->results;
 
-      foreach ( $dataArr as $i => $iValue ) {
-        $obj[] = self::deserializeObj( $dataArr[ $i ], $modelClass );
+      foreach ( $dataArr as $key => $value ) {
+        $newObj = self::deserializeObj( $serializer, $value, $modelClass );
+
+        if ( $isAddHomeworldSpecies ) {
+          $newObj->homeworld = json_decode( self::requestData( $newObj->homeworld ) )->name;
+            $newObj->species = \count( $newObj->species ) > 0
+              ? json_decode( self::requestData( $newObj->species[ 0 ] ) )->name
+              : '';
+        }
+
+        $obj[] = $newObj;
       }
     } catch ( \Exception $ex ) {
-      // TODO: Log exception and/or attempt to recover, else, return false
-
       return [];
     }
 
@@ -78,28 +53,13 @@ abstract class Helper {
   }
 
   /**
-   * @param Collection $data
-   * @param bool       $hasResults
-   *
-   * @return array
-   */
-  public static function getJsonResultsAsArray( Collection $data, bool $hasResults = true ): array {
-    $result = json_decode( json_decode( $data, true )[ 0 ], true );
-
-    return $hasResults ? $result[ 'results' ] : $result;
-  }
-
-  /**
-   * @param array $data
-   * @param       $modelClass
+   * @param Serializer $serializer
+   * @param            $data
+   * @param            $modelClass
    *
    * @return object
    */
-  public static function deserializeObj( array $data, $modelClass ) {
-    $encoders = [ new JsonEncoder() ];
-    $normalizers = [ new ObjectNormalizer() ];
-    $serializer = new Serializer( $normalizers, $encoders );
-
+  public static function deserializeObj( Serializer $serializer, $data, $modelClass ) {
     return $serializer->deserialize( json_encode( $data, JSON_UNESCAPED_SLASHES ), $modelClass, 'json' );
   }
 
@@ -112,11 +72,12 @@ abstract class Helper {
    */
   public static function hydrateModel( array $urls, $modelClass, bool $isSingleResult = false ) {
     $results = [];
+    $serializer = new Serializer( [ new ObjectNormalizer() ], [ new JsonEncoder() ] );
 
     foreach ( $urls as $url ) {
       $data = self::requestData( $url );
-      $arr = self::getJsonResultsAsArray( $data, false );
-      $results[] = self::deserializeObj( $arr, $modelClass );
+      $arr = json_decode( $data, true );
+      $results[] = self::deserializeObj( $serializer, $arr, $modelClass );
     }
 
     if ( $isSingleResult && \count( $results ) > 0 ) {
@@ -126,11 +87,45 @@ abstract class Helper {
     return $results;
   }
 
+  /**
+   * @param bool $isSortNameAsc
+   *
+   * @return array
+   */
+  public static function getCharacterNames( bool $isSortNameAsc = true ): array {
+    $characterNames = [];
+
+    try {
+      $nextUrl = URL_PEOPLE;
+
+      do {
+        $data = json_decode( self::requestData( $nextUrl ) );
+        $nextUrl = $data->next ?? '';
+        $results = $data->results;
+        $characterNames[] = map( $results, function ( $result ) {
+          return $result->name;
+        } );
+      } while ( $nextUrl !== null && $nextUrl !== '' );
+
+      $characterNames = flatten( $characterNames );
+    } catch ( \Exception $ex ) {
+      dd( $ex ); // NOTE: Debugging only -> Not for prod
+    }
+
+    if ( $isSortNameAsc ) {
+      sort( $characterNames );
+    }
+
+    return $characterNames;
+  }
+
 }
 
 //#region  CONSTANTS
 
-\define( 'BASE_URL', 'https://swapi.co/api/' );
+//\define( 'BASE_ASSETS_HOST', '/firespring-proj/public/' ); // TODO: Use with XAMPP or if path differs from '/'
+\define( 'BASE_ASSETS_HOST', '/' ); // TODO: Default base path (used with `php artisan serve`)
+\define( 'BASE_URL', env( 'SWAPI_BASE_URL', 'https://swapi.co/api/' ) );
 \define( 'URL_PEOPLE', BASE_URL . 'people' );
 \define( 'URL_PLANET', BASE_URL . 'planets' );
 \define( 'URL_FILM', BASE_URL . 'films' );

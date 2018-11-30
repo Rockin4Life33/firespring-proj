@@ -1,12 +1,21 @@
 @extends('master')
 
 @section('content')
-  @if($planetResidents !== null)
-    @foreach($planetResidents as $key => $value)
-      {!! json_encode($key) . ': ' . json_encode($value) . '<br/>' !!}
-    @endforeach
-  @else
-    @includeIf('partials._empty-data-set')
+  @if ($planetResidents !== null)
+    <pre>{!! $planetResidents !!}</pre>
+  @endif
+
+  @if ($next !== null || $previous !== null)
+    <br />
+    <div class="text-center">
+      @if ($previous !== null)
+        <a href="{{ route('starwars.planetResidents', $previous) }}">&laquo; &nbsp; Previous &nbsp;</a>
+      @endif
+      &nbsp;
+      @if ($next !== null)
+        <a href="{{ route('starwars.planetResidents', $next) }}">&nbsp; Next &nbsp; &raquo;</a>
+      @endif
+    </div>
   @endif
 @endsection
 

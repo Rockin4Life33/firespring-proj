@@ -29,66 +29,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Character extends Model implements SwapiModel {
 
-  //public function __construct( array $attributes = [] ) {
-  //  parent::__construct( $attributes );
-  //
-  //  $this->fill( $attributes );
-  //}
-
-  //protected $fillable = [
-  //  'name',
-  //  'birth_year',
-  //  'eye_color',
-  //  'gender',
-  //  'hair_color',
-  //  'height',
-  //  'mass',
-  //  'skin_color',
-  //  'homeworld',
-  //  'films',
-  //  'species',
-  //  'starships',
-  //  'vehicles',
-  //  'created',
-  //  'edited',
-  //  'url'
-  //];
-
-  /** @var string */
-  public $name;
-  /** @var string */
-  public $birth_year;
-  /** @var string */
-  public $eye_color;
-  /** @var string */
-  public $gender;
-  /** @var string */
-  public $hair_color;
-  /** @var int cm */
-  public $height;
-  /** @var int kg */
-  public $mass;
-  /** @var string */
-  public $skin_color;
-  /** @var \App\Models\Planet */
-  public $homeworld;
-  /** @var \App\Models\Film[] */
-  public $films = [];
-  /** @var \App\Models\Species[] */
-  public $species = [];
-  /** @var \App\Models\Starship[] */
-  public $starships = [];
-  /** @var \App\Models\Vehicle[] */
-  public $vehicles = [];
-  /** @var \DateTime */
-  public $created;
-  /** @var \DateTime */
-  public $edited;
-  /** @var string */
-  public $url;
-
-  //#region  Helper Functions
-
   public function hydrate(): void {
     $this->homeworld = Helper::hydrateModel( [ $this->homeworld ], Planet::class, true );
     $this->films = Helper::hydrateModel( $this->films, Film::class );
@@ -96,7 +36,5 @@ class Character extends Model implements SwapiModel {
     $this->starships = Helper::hydrateModel( $this->starships, Starship::class );
     $this->vehicles = Helper::hydrateModel( $this->vehicles, Vehicle::class );
   }
-
-  //#endregion  Helper Functions
 
 }

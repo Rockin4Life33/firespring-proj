@@ -9,20 +9,24 @@
   "type": "project",
   "require": {
     "php": "7.2.*",
+    "ext-json": "*",
     "fideloper/proxy": "^4.0",
+    "ihor/nspl": "^1.2",
     "laravel/framework": "5.7.*",
     "laravel/tinker": "^1.0",
+    "lodash-php/lodash-php": "^0.0.4",
     "symfony/property-access": "^4.1",
     "symfony/property-info": "^4.1",
     "symfony/serializer": "^4.1"
   },
   "require-dev": {
     "beyondcode/laravel-dump-server": "^1.2",
+    "sebastian/comparator": "^2.1",
     "filp/whoops": "^2.3",
     "fzaninotto/faker": "^1.8",
     "mockery/mockery": "^1.2",
     "nunomaduro/collision": "^2.1",
-    "phpunit/phpunit": "^7.4"
+    "phpunit/phpunit": "^6.0"
   },
   "autoload": {
     "classmap": [

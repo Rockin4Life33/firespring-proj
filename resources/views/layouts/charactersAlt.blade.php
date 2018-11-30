@@ -2,7 +2,11 @@
 
 @section('content')
   @if($characters !== null && count($characters) > 0)
-    <table id="characters" class="table table-striped table-bordered" cellspacing="0" width="100%">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+
+    <table id="characters" class="table table-striped table-bordered table-responsive" cellspacing="0" width="100%">
       <thead>
         <tr>
           <th>Name</th>
@@ -42,20 +46,24 @@
           </tr>
         @endforeach
       </tbody>
+
+      <tfoot>
+        <tr>
+          <th>Name</th>
+          <th>Birth Year</th>
+          <th>Gender</th>
+          <th>Hair Color</th>
+          <th>Height</th>
+          <th>Mass</th>
+          <th>Skin Color</th>
+          <th>Home World</th>
+          <th>Species</th>
+          <th>Film Count</th>
+          <th>Starship Count</th>
+          <th>Vehicle Count</th>
+        </tr>
+      </tfoot>
     </table>
-    <br />
-    @if ($next !== null || $previous !== null)
-      <br />
-      <div class="text-center">
-        @if ($previous !== null)
-          <a href="{{ route('starwars.characters', $previous) }}">&laquo; &nbsp; Previous &nbsp;</a>
-        @endif
-        &nbsp;
-        @if ($next !== null)
-          <a href="{{ route('starwars.characters', $next) }}">&nbsp; Next &nbsp; &raquo;</a>
-        @endif
-      </div>
-    @endif
   @else
     @includeIf('partials._empty-data-set')
   @endif
@@ -65,10 +73,8 @@
   @if($characters !== null && count($characters) > 0)
     <script>
       $( document ).ready( () => {
-        $( '#characters' ).DataTable( {
-          'searching': false
-        } );
-        $( '#characters_wrapper' ).children( 0 )[ 0 ].remove();
+        $( '#characters' ).DataTable( {} );
+        $('.dataTables_length').addClass('bs-select');
       } );
     </script>
   @endif
