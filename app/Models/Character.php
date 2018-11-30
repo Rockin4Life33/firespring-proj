@@ -29,31 +29,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Character extends Model implements SwapiModel {
 
-  //public function __construct( array $attributes = [] ) {
-  //  parent::__construct( $attributes );
-  //
-  //  //$this->fill( $attributes );
-  //}
-  //
-  //protected $fillable = [
-  //  'name',
-  //  'birth_year',
-  //  'eye_color',
-  //  'gender',
-  //  'hair_color',
-  //  'height',
-  //  'mass',
-  //  'skin_color',
-  //  'homeworld',
-  //  'films',
-  //  'species',
-  //  'starships',
-  //  'vehicles',
-  //  'created',
-  //  'edited',
-  //  'url'
-  //];
-
   /** @var string */
   public $name;
   /** @var string */
