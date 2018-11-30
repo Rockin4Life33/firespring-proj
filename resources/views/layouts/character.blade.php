@@ -24,8 +24,7 @@
     $(document).ready(() => {
       const dropdown = document.getElementById('character-dropdown');
       dropdown.addEventListener('change', (e) => {
-        // const url = window.location.origin + '/character/'; // TODO: Use with root as '/'
-        const url = window.location.origin + '{{ BASE_ASSETS_HOST }}character/'; // TODO: Use when root is not '/'. Tweak BASE_ASSETS_HOST as needed
+        const url = window.location.origin + '{{ BASE_ASSETS_HOST }}character/';
         window.location.assign(url + e.target.selectedOptions[0].value);
       });
     });

@@ -7,9 +7,9 @@ use function _\map;
 use function _\split;
 use App\Helper;
 use App\Models\Character;
-use Exception;
 use Illuminate\View\View;
-use PHPUnit\Util\Printer;
+use function nspl\a\sorted;
+use function nspl\op\propertyGetter;
 
 class StarWarsController extends Controller {
 
@@ -98,23 +98,30 @@ class StarWarsController extends Controller {
   public function characters(): View {
     try {
       $queryString = request()->getQueryString();
+      $sort = split( $queryString, 'sort=' )[ 1 ] ?? null;
       $results = $queryString
         ? Helper::requestData( URL_PEOPLE . "?$queryString" )
         : Helper::requestData( URL_PEOPLE );
-
       $characters = Helper::hydrateData( $results, Character::class, true );
-
       $results = json_decode( $results );
+      $charactersSorted = sorted( flatten( $characters ), propertyGetter( $sort ) );
 
       return view( 'layouts.characters', [
         'next'               => $results->next ? parse_url( $results->next, PHP_URL_QUERY ) : null,
         'previous'           => $results->previous ? parse_url( $results->previous, PHP_URL_QUERY ) : null,
-        'characters'         => flatten( $characters ),
+        'characters'         => $charactersSorted,
         'emptySetInfo'       => null,
         'emptySetHeaderShow' => true
       ] );
     } catch ( \Exception $ex ) {
       dd( $ex ); // NOTE: Debugging only -> Not for prod
+      return view( 'layouts.characters', [
+        'next'               => null,
+        'previous'           => null,
+        'characters'         => [],
+        'emptySetInfo'       => null,
+        'emptySetHeaderShow' => 'Sorry, no results found.'
+      ] );
     }
   }
 
