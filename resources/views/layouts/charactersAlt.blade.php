@@ -17,7 +17,7 @@
           <th>Mass</th>
           <th>Skin Color</th>
           <th>Home World</th>
-          {{--<th>Species</th>--}}
+          <th>Species</th>
           <th>Film Count</th>
           <th>Starship Count</th>
           <th>Vehicle Count</th>
@@ -39,7 +39,7 @@
             <th>{{ $character->mass }}</th>
             <th>{{ $character->skin_color }}</th>
             <th>{{ $character->homeworld ?? '' }}</th>
-            {{--<th>{{ $character->species }}</th>--}}
+            <th>{{ $character->species }}</th>
             <th>{{ \count($character->films) }}</th>
             <th>{{ \count($character->starships) }}</th>
             <th>{{ \count($character->vehicles) }}</th>
@@ -57,7 +57,7 @@
           <th>Mass</th>
           <th>Skin Color</th>
           <th>Home World</th>
-          {{--<th>Species</th>--}}
+          <th>Species</th>
           <th>Film Count</th>
           <th>Starship Count</th>
           <th>Vehicle Count</th>
@@ -73,56 +73,10 @@
   @if($characters !== null && count($characters) > 0)
     <script>
       $( document ).ready( () => {
-        $( '#characters' ).DataTable( {
-          'searching': false
-        } );
-        $( '#characters_wrapper' ).children( 0 )[ 0 ].remove();
+        $( '#characters' ).DataTable( {} );
+        $('.dataTables_length').addClass('bs-select');
       } );
     </script>
 
-    <style>
-      table.dataTable thead .sorting:before,
-      table.dataTable thead .sorting:after,
-      table.dataTable thead .sorting_asc:before,
-      table.dataTable thead .sorting_asc:after,
-      table.dataTable thead .sorting_desc:before,
-      table.dataTable thead .sorting_desc:after {
-        padding: 5px;
-      }
-
-      .dataTables_wrapper .mdb-select {
-        border: none;
-      }
-
-      .dataTables_wrapper .mdb-select.form-control {
-        padding-top: 0;
-        margin-top: -1rem;
-        margin-left: 0.7rem;
-        margin-right: 0.7rem;
-        width: 100px;
-      }
-
-      .dataTables_length label {
-        display: flex;
-        justify-content: left;
-      }
-
-      .dataTables_filter label {
-        margin-bottom: 0;
-      }
-
-      .dataTables_filter label input.form-control {
-        margin-top: -0.6rem;
-        padding-bottom: 0;
-      }
-
-      table.dataTable {
-        margin-bottom: 3rem !important;
-      }
-
-      div.dataTables_wrapper div.dataTables_info {
-        padding-top: 0;
-      }
-    </style>
   @endif
 @endsection
