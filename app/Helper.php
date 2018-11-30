@@ -109,7 +109,7 @@ abstract class Helper {
 
       $characterNames = flatten( $characterNames );
     } catch ( \Exception $ex ) {
-      dd( $ex );
+      dd( $ex ); // NOTE: Debugging only -> Not for prod
     }
 
     if ( $isSortNameAsc ) {

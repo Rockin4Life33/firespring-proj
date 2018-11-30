@@ -49,7 +49,7 @@ class StarWarsController extends Controller {
         }
 
         if ( $character === null ) {
-          throw new \Exception( 'Character not found' );
+          throw new \RuntimeException( 'Character not found' );
         }
       } catch ( \Exception $ex ) {
         $emptySetInfo = "Sorry, no results were found for '$name'.";
@@ -74,7 +74,6 @@ class StarWarsController extends Controller {
     $emptySetInfo = null;
     $maxCharacters = 50;
 
-    set_time_limit( 60 );
     $time_start = microtime( true ); // TODO: REMOVE ME --> DEBUGGING
 
     try {
@@ -89,7 +88,6 @@ class StarWarsController extends Controller {
       } while ( $maxCharacters > 0 && ( $nextUrl !== null && $nextUrl !== '' ) );
     } catch ( \Exception $ex ) {
       $emptySetInfo = null;
-      dd( $data );
     }
 
     $time_end = microtime( true ); // TODO: REMOVE ME --> DEBUGGING
@@ -130,7 +128,7 @@ class StarWarsController extends Controller {
         'planetResidents' => json_encode( $planetResidents, $options )
       ] );
     } catch ( \Exception $ex ) {
-      dd( $ex );
+      dd( $ex ); // NOTE: Debugging only -> Not for prod
     }
   }
 
